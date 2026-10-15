@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treinamento PCP 4.0: ERP, APS e MES</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        slate: {
+                            850: '#151e2e',
+                            900: '#0f172a',
+                            950: '#0a0f1c',
+                        },
+                        neon: {
+                            blue: '#3b82f6',
+                            green: '#10b981',
+                            amber: '#f59e0b',
+                            red: '#ef4444'
+                        }
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0a0f1c; color: #e2e8f0; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        .module-section { display: none; opacity: 0; transition: opacity 0.3s ease-in-out; }
+        .module-section.active { display: block; opacity: 1; }
+
+        /* Gantt Animations */
+        .gantt-item { transition: all 0.5s ease; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        .gantt-item.new-entry { animation: slideInGantt 0.5s forwards; }
+        
+        @keyframes slideInGantt {
+            from { opacity: 0; width: 0; padding: 0; margin: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Flow Chart Lines */
+        .flow-connector {
+            position: relative;
+            background: repeating-linear-gradient(90deg, #334155 0, #334155 5px, transparent 5px, transparent 10px);
+            background-size: 20px 100%;
+        }
+        .flow-connector.active {
+            background: repeating-linear-gradient(90deg, #10b981 0, #10b981 5px, transparent 5px, transparent 10px);
+            animation: flowMove 1s linear infinite;
+        }
+        @keyframes flowMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 20px 0; }
+        }
+
+        /* Form Inputs focus */
+        input:focus, select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 1px #3b82f6; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden antialiased selection:bg-neon-blue selection:text-white">
+
+    <aside class="w-72 bg-slate-900 border-r border-slate-800 flex flex-col h-full shrink-0 z-20 shadow-xl">
+        <div class="p-6 border-b border-slate-800">
+            <div class="flex items-center gap-3 text-white font-black text-2xl tracking-tight">
+                <i class="fa-solid fa-layer-group text-neon-blue"></i>
+                PCP<span class="text-neon-green">4.0</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-2 font-mono tracking-widest uppercase">Academia Corporativa</p>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-2">
+            <button onclick="navTo('mod1')" id="nav-mod1" class="nav-link w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-lg text-white bg-slate-800 border border-slate-700 transition-all">
+                <i class="fa-solid fa-globe w-5 text-center text-slate-300"></i> Módulo 1: Contexto 4.0
+            </button>
+            <button onclick="navTo('mod2')" id="nav-mod2" class="nav-link w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <i class="fa-solid fa-microchip w-5 text-center text-slate-300"></i> Módulo 2: A Tríade
+            </button>
+            <button onclick="navTo('mod3')" id="nav-mod3" class="nav-link w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <i class="fa-solid fa-network-wired w-5 text-center text-slate-300"></i> Módulo 3: Fluxo Integrado
+            </button>
+            <button onclick="navTo('mod4')" id="nav-mod4" class="nav-link w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <i class="fa-solid fa-laptop-code w-5 text-center text-neon-amber"></i> Módulo 4: Simuladores
+            </button>
+            <button onclick="navTo('mod5')" id="nav-mod5" class="nav-link w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <i class="fa-solid fa-calculator w-5 text-center text-neon-green"></i> Módulo 5: Gêmeo Digital
+            </button>
+            <button onclick="navTo('mod6')" id="nav-mod6" class="nav-link w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 transition-all">
+                <i class="fa-solid fa-robot w-5 text-center text-purple-400"></i> Módulo 6: IA e Preditiva
+            </button>
+        </nav>
+        
+        <div class="p-4 border-t border-slate-800 bg-slate-900 text-xs text-slate-500 font-mono text-center">
+            Versão Interativa v2.0
+        </div>
+    </aside>
+
+    <main class="flex-1 bg-slate-950 h-full overflow-y-auto relative scroll-smooth">
+        
+        <!-- MÓDULO 1 -->
+        <section id="mod1" class="module-section active p-8 md:p-12 max-w-6xl mx-auto">
+            <div class="relative rounded-2xl overflow-hidden mb-12 shadow-2xl border border-slate-800">
+                <div class="absolute inset-0 bg-gradient-to-r from-neon-blue/20 to-neon-green/20 mix-blend-overlay"></div>
+                <div class="absolute inset-0 bg-[url('https://placehold.co/1200x400/0f172a/3b82f6?text=+')] opacity-20 bg-cover bg-center"></div>
+                <div class="relative p-12 md:p-20 text-center">
+                    <h1 class="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight drop-shadow-md">Capacitar Equipes para<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-neon-blue to-neon-green">Otimizar Processos</span></h1>
+                    <p class="text-xl md:text-2xl font-medium text-slate-200">A mentalidade essencial do PCP moderno: <strong class="text-white bg-slate-800/50 px-3 py-1 rounded">Menos perda, mais entrega.</strong></p>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-8 mb-8">
+                <h2 class="text-3xl font-bold text-white mb-6">O Contexto do PCP na Indústria 4.0</h2>
+                <div class="prose prose-invert max-w-none text-slate-300 space-y-4 text-lg">
+                    <p>O Planejamento e Controle da Produção deixou de ser o setor que apenas emite planilhas de Excel e apaga incêndios no chão de fábrica. Hoje, o PCP é o núcleo estratégico da manufatura. As planilhas estáticas deram lugar à análise de dados e à conectividade em tempo real.</p>
+                    <p>Para sobreviver neste ambiente altamente volátil e conectado, o profissional precisa unir o conhecimento técnico clássico (como cálculo de MRP e Teoria das Restrições) com três novas capacidades vitais:</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-slate-800/50 border border-slate-700 p-6 rounded-xl hover:border-neon-blue transition-colors">
+                    <div class="w-14 h-14 bg-neon-blue/20 rounded-lg flex items-center justify-center text-neon-blue text-2xl mb-4"><i class="fa-solid fa-glasses"></i></div>
+                    <h3 class="text-xl font-bold text-white mb-2">Visão Sistêmica</h3>
+                    <p class="text-slate-400">Entender que uma pequena mudança no sequenciamento afeta o nível de estoque (Compras), a promessa comercial (Vendas) e o fluxo da logística simultaneamente.</p>
+                </div>
+                <div class="bg-slate-800/50 border border-slate-700 p-6 rounded-xl hover:border-neon-green transition-colors">
+                    <div class="w-14 h-14 bg-neon-green/20 rounded-lg flex items-center justify-center text-neon-green text-2xl mb-4"><i class="fa-solid fa-chart-line"></i></div>
+                    <h3 class="text-xl font-bold text-white mb-2">Fluência em Dados</h3>
+                    <p class="text-slate-400">Analisar grandes volumes de informações em tempo real para tomar decisões preditivas. O objetivo é evitar o gargalo antes que ele trave a produção.</p>
+                </div>
+                <div class="bg-slate-800/50 border border-slate-700 p-6 rounded-xl hover:border-neon-amber transition-colors">
+                    <div class="w-14 h-14 bg-neon-amber/20 rounded-lg flex items-center justify-center text-neon-amber text-2xl mb-4"><i class="fa-solid fa-handshake"></i></div>
+                    <h3 class="text-xl font-bold text-white mb-2">Comunicação e Negociação</h3>
+                    <p class="text-slate-400">Atuar como o diplomata entre as urgências de Vendas (que exige agilidade de entrega) e a necessidade da Produção (que exige estabilidade e lotes econômicos).</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- MÓDULO 2 -->
+        <section id="mod2" class="module-section p-8 md:p-12 max-w-6xl mx-auto">
+            <h1 class="text-4xl font-bold text-white mb-4">A Tríade Tecnológica do PCP</h1>
+            <p class="text-lg text-slate-400 mb-10">Para entender a fábrica inteligente, precisamos desmistificar o papel de cada sistema e como eles conversam entre si. Navegue pelos pilares abaixo:</p>
+
+            <!-- Tabs Navigation -->
+            <div class="flex flex-col md:flex-row gap-4 mb-8">
+                <button onclick="openTab('tab-erp')" id="btn-tab-erp" class="triad-tab-btn flex-1 bg-neon-blue/20 border-2 border-neon-blue text-white py-4 px-6 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all">
+                    <i class="fa-solid fa-building"></i> ERP (O Cérebro)
+                </button>
+                <button onclick="openTab('tab-aps')" id="btn-tab-aps" class="triad-tab-btn flex-1 bg-slate-800 border-2 border-slate-700 text-slate-400 py-4 px-6 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all hover:bg-slate-700">
+                    <i class="fa-solid fa-brain"></i> APS (O Motor)
+                </button>
+                <button onclick="openTab('tab-mes')" id="btn-tab-mes" class="triad-tab-btn flex-1 bg-slate-800 border-2 border-slate-700 text-slate-400 py-4 px-6 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all hover:bg-slate-700">
+                    <i class="fa-solid fa-microchip"></i> MES (O Sistema Nervoso)
+                </button>
+            </div>
+
+            <!-- Tabs Content -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-8 md:p-12 min-h-[400px]">
+                <!-- ERP Tab -->
+                <div id="tab-erp" class="triad-tab-content block">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-16 h-16 bg-neon-blue text-white rounded-2xl flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(59,130,246,0.4)]"><i class="fa-solid fa-building"></i></div>
+                        <div>
+                            <h2 class="text-3xl font-bold text-white">ERP <span class="text-slate-500 font-medium text-xl block md:inline">Enterprise Resource Planning</span></h2>
+                        </div>
+                    </div>
+                    <p class="text-lg text-slate-300 mb-6">O ERP (como SAP, TOTVS, Oracle) é o sistema de gestão central da empresa. Ele não olha para os segundos da fábrica, mas para os dias e meses do negócio.</p>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="bg-slate-800/50 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-neon-blue font-bold mb-3 uppercase tracking-wider text-sm"><i class="fa-solid fa-gear mr-2"></i>Como funciona no PCP</h4>
+                            <p class="text-slate-400">É no ERP que nascem as Previsões de Vendas e os Pedidos de Clientes. Ele executa o <strong>MRP (Material Requirements Planning)</strong>, cruzando o que precisa ser fabricado com o que há no estoque, gerando as Ordens de Produção macro.</p>
+                        </div>
+                        <div class="bg-slate-800/50 p-6 rounded-lg border border-rose-900/50 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16 bg-rose-500/10 rounded-bl-full flex items-start justify-end p-3"><i class="fa-solid fa-triangle-exclamation text-rose-500"></i></div>
+                            <h4 class="text-rose-400 font-bold mb-3 uppercase tracking-wider text-sm">O Limite do ERP</h4>
+                            <p class="text-slate-400">Trabalha por padrão com <strong class="text-rose-400">capacidade infinita</strong>. Ele diz: "Precisamos produzir 5.000 peças para sexta", mas não sabe se a máquina específica quebrou ou se há operadores suficientes no turno. Falta detalhe de execução.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- APS Tab -->
+                <div id="tab-aps" class="triad-tab-content hidden">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-16 h-16 bg-neon-amber text-black rounded-2xl flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(245,158,11,0.4)]"><i class="fa-solid fa-brain"></i></div>
+                        <div>
+                            <h2 class="text-3xl font-bold text-white">APS <span class="text-slate-500 font-medium text-xl block md:inline">Advanced Planning and Scheduling</span></h2>
+                        </div>
+                    </div>
+                    <p class="text-lg text-slate-300 mb-6">Se o ERP diz <em>o que</em> e <em>quando</em> fazer, o APS diz <em>como</em> e <em>onde</em> fazer, segundo a realidade física exata e restrições do chão de fábrica.</p>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="bg-slate-800/50 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-neon-amber font-bold mb-3 uppercase tracking-wider text-sm"><i class="fa-solid fa-gear mr-2"></i>Como funciona no PCP</h4>
+                            <p class="text-slate-400">Recebe as OPs do ERP e as encaixa num cronograma visual dinâmico, trabalhando com <strong class="text-white">capacidade finita</strong>. Analisa restrições simultâneas: máquinas, ferramentas, matrizes, turnos e tempo de setup.</p>
+                        </div>
+                        <div class="bg-slate-800/50 p-6 rounded-lg border border-amber-900/50">
+                            <h4 class="text-amber-400 font-bold mb-3 uppercase tracking-wider text-sm"><i class="fa-solid fa-bolt mr-2"></i>O Poder do Algoritmo</h4>
+                            <p class="text-slate-400">Possui algoritmos heurísticos que otimizam o sequenciamento matematicamente. Exemplo: agrupa automaticamente produtos por cores similares para reduzir o tempo de limpeza da máquina (setup), economizando horas produtivas.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MES Tab -->
+                <div id="tab-mes" class="triad-tab-content hidden">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-16 h-16 bg-neon-green text-black rounded-2xl flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(16,185,129,0.4)]"><i class="fa-solid fa-microchip"></i></div>
+                        <div>
+                            <h2 class="text-3xl font-bold text-white">MES <span class="text-slate-500 font-medium text-xl block md:inline">Manufacturing Execution System</span></h2>
+                        </div>
+                    </div>
+                    <p class="text-lg text-slate-300 mb-6">A tecnologia que elimina o apontamento de produção em papel. É o elo direto que liga o planejamento à execução física no maquinário.</p>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="bg-slate-800/50 p-6 rounded-lg border border-slate-700">
+                            <h4 class="text-neon-green font-bold mb-3 uppercase tracking-wider text-sm"><i class="fa-solid fa-tablet-screen-button mr-2"></i>Como funciona no PCP</h4>
+                            <p class="text-slate-400">Instalado em tablets nas máquinas (ou conectado aos CLPs), coleta dados em tempo real. O operador visualiza na tela a fila exata de trabalho que o APS sequenciou e apenas segue a ordem.</p>
+                        </div>
+                        <div class="bg-slate-800/50 p-6 rounded-lg border border-emerald-900/50">
+                            <h4 class="text-emerald-400 font-bold mb-3 uppercase tracking-wider text-sm"><i class="fa-solid fa-rotate mr-2"></i>A Execução</h4>
+                            <p class="text-slate-400">Ao apertar "Play", o MES registra velocidade, conta peças boas/refugos. Se parar, exige o motivo apontado. Calcula o <strong>OEE (Eficiência Global do Equipamento)</strong> no ato e retroalimenta o ERP e o APS com dados reais.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MÓDULO 3 -->
+        <section id="mod3" class="module-section p-8 md:p-12 max-w-6xl mx-auto">
+            <h1 class="text-4xl font-bold text-white mb-4">O Fluxo Integrado (O Ciclo da Informação)</h1>
+            <p class="text-lg text-slate-400 mb-12">A mágica do PCP moderno acontece na integração perfeita entre os sistemas. Avance os passos para entender a jornada do pedido.</p>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-8 relative overflow-hidden">
+                <!-- Visual Stepper -->
+                <div class="flex items-center justify-between mb-16 relative">
+                    <div class="absolute top-1/2 left-0 right-0 h-1 bg-slate-800 -translate-y-1/2 z-0"></div>
+                    
+                    <div class="step-node z-10 w-24 text-center cursor-pointer group" onclick="setFlowStep(1)">
+                        <div id="node-1" class="w-16 h-16 mx-auto bg-neon-blue text-white rounded-full flex items-center justify-center text-2xl border-4 border-slate-900 shadow-lg transition-colors"><i class="fa-solid fa-user-tie"></i></div>
+                        <p class="mt-3 text-sm font-bold text-white group-hover:text-neon-blue">Comercial</p>
+                    </div>
+                    <div class="flow-connector flex-1 h-1 z-0 transition-all" id="conn-1"></div>
+                    
+                    <div class="step-node z-10 w-24 text-center cursor-pointer group" onclick="setFlowStep(2)">
+                        <div id="node-2" class="w-16 h-16 mx-auto bg-slate-800 text-slate-500 rounded-full flex items-center justify-center text-2xl border-4 border-slate-900 transition-colors"><i class="fa-solid fa-building"></i></div>
+                        <p class="mt-3 text-sm font-bold text-slate-400 group-hover:text-white">ERP</p>
+                    </div>
+                    <div class="flow-connector flex-1 h-1 z-0 transition-all" id="conn-2"></div>
+                    
+                    <div class="step-node z-10 w-24 text-center cursor-pointer group" onclick="setFlowStep(3)">
+                        <div id="node-3" class="w-16 h-16 mx-auto bg-slate-800 text-slate-500 rounded-full flex items-center justify-center text-2xl border-4 border-slate-900 transition-colors"><i class="fa-solid fa-brain"></i></div>
+                        <p class="mt-3 text-sm font-bold text-slate-400 group-hover:text-white">APS</p>
+                    </div>
+                    <div class="flow-connector flex-1 h-1 z-0 transition-all" id="conn-3"></div>
+                    
+                    <div class="step-node z-10 w-24 text-center cursor-pointer group" onclick="setFlowStep(4)">
+                        <div id="node-4" class="w-16 h-16 mx-auto bg-slate-800 text-slate-500 rounded-full flex items-center justify-center text-2xl border-4 border-slate-900 transition-colors"><i class="fa-solid fa-microchip"></i></div>
+                        <p class="mt-3 text-sm font-bold text-slate-400 group-hover:text-white">MES</p>
+                    </div>
+                    <div class="flow-connector flex-1 h-1 z-0 transition-all" id="conn-4"></div>
+                    
+                    <div class="step-node z-10 w-24 text-center cursor-pointer group" onclick="setFlowStep(5)">
+                        <div id="node-5" class="w-16 h-16 mx-auto bg-slate-800 text-slate-500 rounded-full flex items-center justify-center text-2xl border-4 border-slate-900 transition-colors"><i class="fa-solid fa-rotate-left"></i></div>
+                        <p class="mt-3 text-sm font-bold text-slate-400 group-hover:text-white">Retorno</p>
+                    </div>
+                </div>
+
+                <!-- Text Content for Steps -->
+                <div class="bg-slate-800/50 border border-slate-700 p-8 rounded-xl min-h-[180px] flex flex-col justify-center text-center">
+                    <h3 id="flow-title" class="text-2xl font-bold text-neon-blue mb-4">1. Entrada do Pedido</h3>
+                    <p id="flow-desc" class="text-lg text-slate-300">O Comercial fecha uma venda com o cliente e insere os dados do pedido e prazo desejado no sistema central.</p>
+                </div>
+                
+                <!-- Controls -->
+                <div class="flex justify-center gap-4 mt-8">
+                    <button onclick="prevFlow()" class="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded font-medium transition-colors border border-slate-700"><i class="fa-solid fa-arrow-left mr-2"></i> Anterior</button>
+                    <button onclick="nextFlow()" class="px-6 py-2 bg-neon-blue hover:bg-blue-600 text-white rounded font-medium transition-colors shadow-lg shadow-blue-900/50">Próximo <i class="fa-solid fa-arrow-right ml-2"></i></button>
+                </div>
+            </div>
+        </section>
+
+        <!-- MÓDULO 4 -->
+        <section id="mod4" class="module-section p-8 md:p-12 max-w-6xl mx-auto">
+            <h1 class="text-4xl font-bold text-white mb-2">Laboratório Prático (Simuladores)</h1>
+            <p class="text-lg text-slate-400 mb-8">Interaja com os painéis para entender como as decisões e imprevistos afetam a malha de produção em tempo real.</p>
+
+            <!-- Sub-tabs -->
+            <div class="flex border-b border-slate-800 mb-8">
+                <button onclick="openSimTab('sim-urgente')" id="btn-sim-urgente" class="px-6 py-3 font-bold text-neon-amber border-b-2 border-neon-amber bg-slate-900/50">
+                    <i class="fa-solid fa-bolt mr-2"></i> Cenário 1: Pedido Urgente
+                </button>
+                <button onclick="openSimTab('sim-quebra')" id="btn-sim-quebra" class="px-6 py-3 font-bold text-slate-500 border-b-2 border-transparent hover:text-slate-300 transition-colors">
+                    <i class="fa-solid fa-triangle-exclamation mr-2"></i> Cenário 2: Quebra de Máquina
+                </button>
+            </div>
+
+            <!-- Cenário 1: Gantt e Input Manual -->
+            <div id="sim-urgente" class="sim-tab-content block">
+                <div class="grid lg:grid-cols-3 gap-8">
+                    <!-- Form Control -->
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl h-fit">
+                        <h3 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-plus-circle text-neon-amber mr-2"></i> Inserir Pedido VIP</h3>
+                        <p class="text-sm text-slate-400 mb-6">O diretor comercial ligou e exige o encaixe imediato na linha principal.</p>
+                        
+                        <form id="form-urgente" onsubmit="addUrgentOrder(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1 uppercase tracking-wide">Nome do Pedido</label>
+                                <input type="text" id="urg-name" required value="OP-VIP-99" class="w-full bg-slate-950 border border-slate-700 rounded px-4 py-2 text-white font-mono placeholder-slate-600">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1 uppercase tracking-wide">Tempo Requerido (Horas)</label>
+                                <input type="number" id="urg-time" required min="1" max="8" value="3" class="w-full bg-slate-950 border border-slate-700 rounded px-4 py-2 text-white font-mono">
+                            </div>
+                            <button type="submit" id="btn-submit-urgente" class="w-full bg-neon-amber hover:bg-amber-600 text-black font-bold py-3 rounded transition-colors mt-2 shadow-[0_0_15px_rgba(245,158,11,0.3)]">
+                                Encaixar no APS
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Visual Gantt & KPIs -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <!-- KPIs -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                                <p class="text-slate-400 text-xs font-bold uppercase">Custo Extra (Setup)</p>
+                                <p id="kpi-custo" class="text-2xl font-mono text-white mt-1 transition-colors">R$ 0,00</p>
+                            </div>
+                            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                                <p class="text-slate-400 text-xs font-bold uppercase">Atraso Gerado na Fila</p>
+                                <p id="kpi-atraso" class="text-2xl font-mono text-white mt-1 transition-colors">0 horas</p>
+                            </div>
+                        </div>
+
+                        <!-- Gantt Visualizer -->
+                        <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl overflow-hidden">
+                            <h4 class="text-slate-300 font-bold mb-4 border-b border-slate-800 pb-2">Linha de Produção Principal (M1)</h4>
+                            
+                            <!-- Timeline Header -->
+                            <div class="flex text-[10px] font-mono text-slate-500 mb-2">
+                                <div class="flex-1 border-l border-slate-800 pl-1">08:00</div>
+                                <div class="flex-1 border-l border-slate-800 pl-1">10:00</div>
+                                <div class="flex-1 border-l border-slate-800 pl-1">12:00</div>
+                                <div class="flex-1 border-l border-slate-800 pl-1">14:00</div>
+                                <div class="flex-1 border-l border-slate-800 pl-1">16:00</div>
+                                <div class="flex-1 border-l border-slate-800 pl-1">18:00</div>
+                                <div class="flex-1 border-l border-slate-800 pl-1">20:00</div>
+                            </div>
+
+                            <!-- Gantt Track -->
+                            <div id="gantt-track" class="flex h-12 bg-slate-950 rounded border border-slate-800 p-1 gap-1 w-full overflow-hidden relative">
+                                <!-- Initial Orders -->
+                                <div id="job-1" class="gantt-item bg-blue-600 border border-blue-400 rounded h-full flex items-center justify-center text-xs font-mono text-white shadow" style="width: 30%">OP-101</div>
+                                <div id="job-2" class="gantt-item bg-indigo-600 border border-indigo-400 rounded h-full flex items-center justify-center text-xs font-mono text-white shadow" style="width: 40%">OP-102</div>
+                                <div id="job-3" class="gantt-item bg-purple-600 border border-purple-400 rounded h-full flex items-center justify-center text-xs font-mono text-white shadow" style="width: 30%">OP-103</div>
+                            </div>
+
+                            <!-- Painel Analítico: Impacto do Pedido Urgente -->
+                            <div id="urgente-analysis" class="mt-6 bg-[#0a0f1c] border border-slate-700 rounded-lg p-5 hidden shadow-lg relative overflow-hidden">
+                                <div class="absolute top-0 left-0 w-1 h-full bg-neon-amber"></div>
+                                <h5 class="text-neon-amber font-bold flex items-center gap-2 mb-3"><i class="fa-solid fa-magnifying-glass-chart"></i> Análise de Impacto e Consequências</h5>
+                                <div class="space-y-3 text-sm text-slate-300">
+                                    <p><strong class="text-white">O que mudou:</strong> A ordem regular (OP-101) foi fatiada. O APS interrompeu o fluxo e injetou um novo bloco de <span class="text-neon-red font-bold">SETUP</span> para preparar o maquinário para o pedido <span id="dyn-urg-name" class="font-mono font-bold text-neon-amber"></span>.</p>
+                                    <p><strong class="text-white">Como afeta as demais operações:</strong> As operações subsequentes (OP-102 e OP-103) sofreram <span id="dyn-urg-delay" class="text-neon-amber font-bold"></span> de atraso em cascata (empurradas para a direita). Isso afeta diretamente a promessa de entrega e causa a queda do indicador global de <strong class="text-white">OTIF (On Time In Full)</strong> dessas faturas.</p>
+                                    <p><strong class="text-white">Consequências Táticas:</strong> A decisão elevou os custos produtivos em <span id="dyn-urg-cost" class="text-neon-red font-bold"></span> unicamente devido à quebra de setup econômico. Ação requerida: O PCP deve comunicar o Comercial imediatamente para renegociar as janelas logísticas dos clientes afetados, alinhando a cadeia.</p>
+                                </div>
+                                <button onclick="resetGantt()" class="mt-4 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded text-xs font-bold transition-colors w-full border border-slate-600 flex justify-center items-center gap-2"><i class="fa-solid fa-rotate-left"></i> Reiniciar Simulação</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cenário 2: Quebra e MES -->
+            <div id="sim-quebra" class="sim-tab-content hidden">
+                 <div class="grid lg:grid-cols-3 gap-8">
+                    <!-- Form Control -->
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl h-fit">
+                        <h3 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-hammer text-neon-red mr-2"></i> Apontamento de Quebra</h3>
+                        <p class="text-sm text-slate-400 mb-6">Simule o apontamento do operador no terminal MES durante a madrugada.</p>
+                        
+                        <form id="form-quebra" onsubmit="triggerBreakdownForm(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1 uppercase tracking-wide">Motivo da Parada</label>
+                                <select id="brk-reason" class="w-full bg-slate-950 border border-slate-700 rounded px-4 py-2 text-white font-sans">
+                                    <option value="Falha Mecânica (Motor)">Falha Mecânica (Motor)</option>
+                                    <option value="Falta de Matéria-Prima">Falta de Matéria-Prima</option>
+                                    <option value="Quebra de Ferramenta">Quebra de Ferramenta</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1 uppercase tracking-wide">Previsão de Parada (Min)</label>
+                                <input type="number" id="brk-duration" required min="30" value="120" class="w-full bg-slate-950 border border-slate-700 rounded px-4 py-2 text-white font-mono">
+                            </div>
+                            <button type="submit" id="btn-submit-quebra" class="w-full bg-neon-red hover:bg-red-600 text-white font-bold py-3 rounded transition-colors mt-2 shadow-[0_0_15px_rgba(239,68,68,0.3)]">
+                                <i class="fa-solid fa-exclamation-triangle"></i> Registrar no MES
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Visualização do Chão de Fábrica -->
+                    <div class="lg:col-span-2 space-y-4">
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- Maquina 1 -->
+                            <div id="ui-m1" class="bg-slate-900 border-2 border-neon-green rounded-xl p-5 transition-all relative overflow-hidden">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="text-white font-bold">Injetora Principal (M1)</h4>
+                                    <span id="ui-m1-status" class="bg-neon-green text-slate-900 text-xs font-bold px-2 py-1 rounded">RODANDO</span>
+                                </div>
+                                <p class="text-slate-400 text-sm mb-4">Ordem Atual: <strong id="ui-m1-op" class="text-white font-mono">OP-505</strong></p>
+                                <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                                    <div id="ui-m1-progress" class="bg-neon-green h-full w-1/2"></div>
+                                </div>
+                            </div>
+
+                            <!-- Maquina 2 -->
+                            <div id="ui-m2" class="bg-slate-900 border border-slate-800 rounded-xl p-5 opacity-50 transition-all">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="text-slate-400 font-bold">Injetora Secundária (M2)</h4>
+                                    <span id="ui-m2-status" class="bg-slate-800 text-slate-400 border border-slate-700 text-xs font-bold px-2 py-1 rounded">OCIOSA</span>
+                                </div>
+                                <p class="text-slate-500 text-sm mb-4">Ordem Atual: <strong id="ui-m2-op" class="font-mono">--</strong></p>
+                                <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                                    <div id="ui-m2-progress" class="bg-slate-700 h-full w-0"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Terminal Log -->
+                        <div class="bg-[#0c0c0c] border border-slate-700 rounded-xl p-4 font-mono text-xs text-slate-400 h-40 overflow-y-auto flex flex-col gap-1 shadow-inner" id="term-log">
+                            <div><span class="text-neon-blue">[SISTEMA]</span> Ambiente conectado. Monitoramento ativo.</div>
+                            <div><span class="text-neon-green">[MES]</span> Coleta de dados da Máquina 1 operando normalmente (OEE 92%).</div>
+                        </div>
+                        
+                        <!-- Painel Analítico: Impacto da Quebra -->
+                        <div id="quebra-analysis" class="mt-4 bg-[#0a0f1c] border border-slate-700 rounded-lg p-5 hidden shadow-lg relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-neon-red"></div>
+                            <h5 class="text-neon-red font-bold flex items-center gap-2 mb-3"><i class="fa-solid fa-triangle-exclamation"></i> Análise de Impacto e Consequências</h5>
+                            <div class="space-y-3 text-sm text-slate-300">
+                                <p><strong class="text-white">O que mudou:</strong> A Injetora Principal (M1) entrou em colapso devido a <span id="dyn-brk-reason" class="text-neon-red font-bold"></span>, perdendo <span id="dyn-brk-time" class="text-white font-bold"></span> minutos de produtividade. O apontamento via MES disparou um alerta vermelho para a Manutenção e exigiu replanejamento imediato do APS.</p>
+                                <p><strong class="text-white">Como afeta as demais operações:</strong> O algoritmo de capacidade finita identificou a M2 ociosa e transferiu a OP-505. Esse desvio de rota altera pontualmente o gargalo da fábrica para a M2, que historicamente possui um tempo de ciclo maior.</p>
+                                <p><strong class="text-white">Consequências Táticas:</strong> O indicador de <strong class="text-white">Disponibilidade do OEE</strong> despencará neste turno. A conectividade permitiu aplicar a regra de <em>"Menos perda, mais entrega"</em> mitigando o atraso da ordem crítica. Recomenda-se abrir MASP/8D para analisar a causa raiz do problema mecânico e revisar a matriz de Manutenção Autônoma (TPM).</p>
+                            </div>
+                            <button onclick="resetBreakdown()" id="btn-reset-quebra" class="mt-4 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded text-xs font-bold transition-colors w-full border border-slate-600 flex justify-center items-center gap-2"><i class="fa-solid fa-rotate-left"></i> Reiniciar Simulação de Quebra</button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MÓDULO 5 -->
+        <section id="mod5" class="module-section p-8 md:p-12 max-w-6xl mx-auto">
+            <h1 class="text-4xl font-bold text-white mb-2">Gêmeo Digital: OEE em Tempo Real</h1>
+            <p class="text-lg text-slate-400 mb-8">Utilize a calculadora abaixo para simular os indicadores e descobrir onde estão as maiores perdas da sua fábrica.</p>
+
+            <div class="grid lg:grid-cols-3 gap-8 pb-12">
+                <!-- Form Inputs -->
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl h-fit">
+                    <h3 class="text-xl font-bold text-white mb-4"><i class="fa-solid fa-calculator text-neon-green mr-2"></i> Parâmetros do Turno</h3>
+                    <form id="form-oee" onsubmit="calculateOEE(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-1 uppercase tracking-wide">Tempo Total Programado (min)</label>
+                            <input type="number" id="oee-total-time" required value="480" class="w-full bg-slate-950 border border-slate-700 rounded px-4 py-2 text-white font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-1 uppercase tracking-wide">Tempo de Parada (min)</label>
+                            <input type="number" id="oee-down-time" required value="60" class="w-full bg-slate-950 border border-slate-700 rounded px-4 py-2 text-white font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-1 uppercase tracking-wide">Tempo Ciclo Padrão (min/peça)</label>
+                            <input type="number" step="0.1" id="oee-cycle" required value="2.5" class="w-full bg-slate-950 border border-slate-700 rounded px-4 py-2 text-white font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-1 uppercase tracking-wide">Produção Total (peças)</label>
+                            <input type="number" id="oee-prod" required value="150" class="w-full bg-slate-950 border border-slate-700 rounded px-4 py-2 text-white font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 mb-1 uppercase tracking-wide">Peças Boas</label>
+                            <input type="number" id="oee-good" required value="142" class="w-full bg-slate-950 border border-slate-700 rounded px-4 py-2 text-white font-mono">
+                        </div>
+                        <button type="submit" class="w-full bg-neon-green hover:bg-emerald-600 text-slate-900 font-bold py-3 rounded transition-colors mt-4 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                            <i class="fa-solid fa-chart-pie"></i> Calcular OEE
+                        </button>
+                    </form>
+                </div>
+
+                <!-- OEE Dashboard e Análise -->
+                <div class="lg:col-span-2 flex flex-col gap-4">
+                    <div class="grid grid-cols-3 gap-4">
+                        <!-- Disponibilidade -->
+                        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-slate-400 text-xs font-bold uppercase">Disponibilidade</span>
+                                <span id="val-a" class="text-white font-mono font-bold">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
+                                <div id="bar-a" class="bg-neon-blue h-full w-0 transition-all duration-1000"></div>
+                            </div>
+                        </div>
+                        <!-- Performance -->
+                        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-slate-400 text-xs font-bold uppercase">Performance</span>
+                                <span id="val-p" class="text-white font-mono font-bold">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
+                                <div id="bar-p" class="bg-neon-amber h-full w-0 transition-all duration-1000"></div>
+                            </div>
+                        </div>
+                        <!-- Qualidade -->
+                        <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-slate-400 text-xs font-bold uppercase">Qualidade</span>
+                                <span id="val-q" class="text-white font-mono font-bold">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
+                                <div id="bar-q" class="bg-neon-red h-full w-0 transition-all duration-1000"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- OEE FINAL -->
+                    <div class="bg-slate-900 p-6 rounded-lg border-2 border-neon-green shadow-[0_0_15px_rgba(16,185,129,0.2)] mt-2">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-neon-green font-black text-lg md:text-xl">OEE GLOBAL</span>
+                            <span id="val-oee" class="text-white font-mono text-3xl md:text-4xl font-bold">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-950 h-6 rounded-full overflow-hidden border border-slate-800">
+                            <div id="bar-oee" class="bg-neon-green h-full w-0 transition-all duration-1000 relative">
+                                <div class="absolute inset-0 bg-white/20 w-full animate-[flowMove_1s_linear_infinite]" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px);"></div>
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-3 text-center uppercase tracking-widest">Benchmark Indústria: > 85%</p>
+                    </div>
+
+                    <!-- Painel Analítico: Diagnóstico do OEE -->
+                    <div id="oee-analysis-panel" class="bg-[#0a0f1c] border-t-4 border-slate-700 p-5 rounded-xl shadow-lg mt-2 hidden transition-all">
+                        <h4 id="oee-analysis-title" class="text-lg font-bold text-white mb-2 flex items-center gap-2"></h4>
+                        <p id="oee-analysis-text" class="text-sm text-slate-300 leading-relaxed"></p>
+                        <div class="mt-4 bg-slate-900 p-4 rounded-lg border border-slate-800 text-sm">
+                            <strong class="text-white block mb-1 flex items-center gap-2"><i class="fa-solid fa-lightbulb text-neon-amber"></i> Ação Prática de Melhoria (Menos perda, mais entrega)</strong>
+                            <span id="oee-action-text" class="text-slate-400"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MÓDULO 6: IA e Preditiva -->
+        <section id="mod6" class="module-section p-8 md:p-12 max-w-6xl mx-auto">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-16 h-16 bg-purple-600/20 text-purple-400 rounded-2xl flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(147,51,234,0.3)]">
+                    <i class="fa-solid fa-brain"></i>
+                </div>
+                <div>
+                    <h1 class="text-4xl font-bold text-white">IA e Análise Preditiva</h1>
+                    <p class="text-lg text-purple-400 font-mono mt-1">Antecipando o futuro para não ser engolido por ele.</p>
+                </div>
+            </div>
+            
+            <p class="text-lg text-slate-300 mb-8 mt-6">O planejamento puramente <strong>reativo</strong> ("esperar o pedido chegar ou a máquina quebrar para tomar uma ação") está dando lugar ao uso de Inteligência Artificial. Algoritmos avançados cruzam milhões de dados para prever flutuações, identificar falhas e antecipar gargalos antes que a fábrica pare.</p>
+
+            <!-- Cards Teóricos -->
+            <div class="grid md:grid-cols-3 gap-6 mb-10">
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl"><i class="fa-solid fa-code"></i></div>
+                    <h3 class="text-xl font-bold text-white mb-3 text-purple-400">O que são Algoritmos?</h3>
+                    <p class="text-sm text-slate-400">São sequências de cálculos matemáticos que "aprendem" com o histórico da fábrica (Machine Learning). Eles identificam padrões invisíveis ao olho humano em planilhas gigantescas. Por exemplo: "Sempre que chove no sudeste e é véspera de feriado, a demanda do produto X sobe 15%."</p>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl"><i class="fa-solid fa-chart-line"></i></div>
+                    <h3 class="text-xl font-bold text-white mb-3 text-neon-blue">Previsão de Demanda</h3>
+                    <p class="text-sm text-slate-400">Ao invés de basear o estoque apenas na média de vendas passada, a IA cruza dados de clima, campanhas de marketing e economia global para prever a curva futura. <strong>Impacto:</strong> O ERP dispara ordens de compra precisas muito antes da matéria-prima faltar ou sobrar no almoxarifado.</p>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl"><i class="fa-solid fa-microchip"></i></div>
+                    <h3 class="text-xl font-bold text-white mb-3 text-neon-amber">Manutenção Preditiva</h3>
+                    <p class="text-sm text-slate-400">Sensores IoT acoplados nas máquinas medem temperatura e vibração 24h por dia. A IA sabe exatamente qual é o "desenho" da vibração dias antes de um rolamento quebrar. <strong>Impacto:</strong> Evita-se uma parada corretiva (caótica), trocando por uma manutenção programada e curta.</p>
+                </div>
+            </div>
+
+            <h2 class="text-2xl font-bold text-white mb-6 border-b border-slate-800 pb-2"><i class="fa-solid fa-flask text-purple-400"></i> Laboratório de Algoritmos (Simuladores)</h2>
+
+            <!-- Sub-tabs do Mod 6 -->
+            <div class="flex border-b border-slate-800 mb-8">
+                <button onclick="openSim6Tab('sim6-demanda')" id="btn-sim6-demanda" class="px-6 py-3 font-bold text-neon-blue border-b-2 border-neon-blue bg-slate-900/50">
+                    <i class="fa-solid fa-chart-area mr-2"></i> IA de Demanda & Gargalos
+                </button>
+                <button onclick="openSim6Tab('sim6-manutencao')" id="btn-sim6-manutencao" class="px-6 py-3 font-bold text-slate-500 border-b-2 border-transparent hover:text-slate-300 transition-colors">
+                    <i class="fa-solid fa-wave-square mr-2"></i> Sensores de Manutenção (IoT)
+                </button>
+            </div>
+
+            <!-- Simulador 1: IA de Demanda -->
+            <div id="sim6-demanda" class="sim6-tab-content block">
+                <div class="grid lg:grid-cols-3 gap-8">
+                    <!-- Inputs -->
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl h-fit">
+                        <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-sliders text-neon-blue mr-2"></i> Parâmetros do Mercado</h3>
+                        <p class="text-xs text-slate-400 mb-6">Alimente o algoritmo com as variáveis do próximo mês para prever o volume e antecipar as restrições (gargalos).</p>
+                        
+                        <form id="form-ai-demand" onsubmit="runDemandPrediction(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1 uppercase">Média Histórica (Unidades)</label>
+                                <input type="number" id="ai-dem-base" value="5000" class="w-full bg-slate-950 border border-slate-700 rounded px-4 py-2 text-white font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1 uppercase">Esforço Comercial / Marketing</label>
+                                <select id="ai-dem-mkt" class="w-full bg-slate-950 border border-slate-700 rounded px-4 py-2 text-white font-sans">
+                                    <option value="normal">Manter Padrão (Sem variação)</option>
+                                    <option value="alto">Campanha Agressiva (+ Demanda)</option>
+                                    <option value="baixo">Redução de Verba (- Demanda)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1 uppercase">Sazonalidade Externa (Ex: Clima/Data)</label>
+                                <select id="ai-dem-saz" class="w-full bg-slate-950 border border-slate-700 rounded px-4 py-2 text-white font-sans">
+                                    <option value="neutra">Clima Padrão</option>
+                                    <option value="alta">Altamente Favorável (Ex: Frio p/ casacos)</option>
+                                    <option value="baixa">Desfavorável (Fora de Época)</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="w-full bg-neon-blue hover:bg-blue-600 text-white font-bold py-3 rounded transition-colors mt-2 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+                                <i class="fa-solid fa-bolt"></i> Processar Machine Learning
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Gráfico Preditivo e Análise -->
+                    <div class="lg:col-span-2 space-y-4">
+                        <!-- Chart Area -->
+                        <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl flex flex-col justify-end h-64 relative overflow-hidden">
+                            <h4 class="absolute top-4 left-4 text-slate-400 font-bold text-sm"><i class="fa-solid fa-chart-column mr-2"></i> Projeção de Volume de Produção</h4>
+                            <div class="absolute top-4 right-4 text-white font-mono font-bold text-xl" id="ai-dem-result-text">---</div>
+                            
+                            <!-- Simple CSS Grid Chart -->
+                            <div class="flex items-end justify-around h-40 w-full gap-2 mt-8 border-b border-slate-700 pb-2 relative z-10">
+                                <div class="w-1/4 bg-slate-700 rounded-t flex items-end justify-center pb-2 text-[10px] text-white font-mono" style="height: 60%">M-3</div>
+                                <div class="w-1/4 bg-slate-700 rounded-t flex items-end justify-center pb-2 text-[10px] text-white font-mono" style="height: 65%">M-2</div>
+                                <div class="w-1/4 bg-slate-700 rounded-t flex items-end justify-center pb-2 text-[10px] text-white font-mono" style="height: 62%">M-1</div>
+                                <div id="ai-dem-bar" class="w-1/4 bg-purple-600 rounded-t flex items-end justify-center pb-2 text-[10px] text-white font-mono font-bold transition-all duration-1000 shadow-[0_0_20px_rgba(147,51,234,0.5)] border-t-2 border-purple-300" style="height: 0%">M-FUTURO</div>
+                            </div>
+                        </div>
+
+                        <!-- Análise do Algoritmo -->
+                        <div id="ai-dem-analysis" class="bg-[#0a0f1c] border border-slate-700 rounded-lg p-5 hidden shadow-lg relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-neon-blue"></div>
+                            <h5 class="text-neon-blue font-bold flex items-center gap-2 mb-3"><i class="fa-solid fa-microchip"></i> Decisão Autônoma do Sistema Integrado</h5>
+                            <div class="space-y-3 text-sm text-slate-300" id="ai-dem-analysis-content">
+                                <!-- Preenchido via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simulador 2: Manutenção Preditiva IoT -->
+            <div id="sim6-manutencao" class="sim6-tab-content hidden">
+                <div class="grid lg:grid-cols-2 gap-8">
+                    <!-- Sensor Inputs -->
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl flex flex-col justify-center">
+                        <h3 class="text-lg font-bold text-white mb-2"><i class="fa-solid fa-tower-broadcast text-neon-amber mr-2"></i> Leituras do Sensor IoT em Tempo Real</h3>
+                        <p class="text-xs text-slate-400 mb-8">Movimente os *sliders* para simular o comportamento físico da Injetora Principal durante a produção.</p>
+                        
+                        <div class="space-y-8">
+                            <!-- Slider Temperatura -->
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <label class="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-temperature-half text-rose-500"></i> Temperatura do Motor</label>
+                                    <span class="text-white font-mono font-bold bg-slate-950 px-2 py-1 rounded" id="iot-temp-val">60 °C</span>
+                                </div>
+                                <input type="range" id="iot-temp" min="40" max="130" value="60" class="w-full accent-rose-500" oninput="updatePredictiveSensors()">
+                                <div class="flex justify-between text-[10px] text-slate-500 mt-1"><span>Normal (40-80)</span><span>Crítico (>100)</span></div>
+                            </div>
+                            
+                            <!-- Slider Vibração -->
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <label class="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-wave-square text-blue-500"></i> Vibração do Eixo</label>
+                                    <span class="text-white font-mono font-bold bg-slate-950 px-2 py-1 rounded" id="iot-vib-val">2.0 mm/s</span>
+                                </div>
+                                <input type="range" id="iot-vib" min="0" max="25" value="2" step="0.5" class="w-full accent-blue-500" oninput="updatePredictiveSensors()">
+                                <div class="flex justify-between text-[10px] text-slate-500 mt-1"><span>Normal (0-5)</span><span>Crítico (>12)</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Diagnostic Panel -->
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl text-center relative overflow-hidden flex flex-col items-center justify-center min-h-[350px]">
+                        
+                        <!-- Motor Visual -->
+                        <div class="relative mb-6">
+                            <i id="iot-motor-icon" class="fa-solid fa-gear text-8xl text-slate-600 transition-colors duration-500"></i>
+                            <div id="iot-alert-ring" class="absolute inset-0 border-4 border-transparent rounded-full animate-ping opacity-0"></div>
+                        </div>
+
+                        <p class="text-slate-400 text-sm uppercase tracking-widest font-bold mb-1">Risco Predito de Quebra</p>
+                        <h2 id="iot-risk-text" class="text-6xl font-black font-mono text-neon-green transition-colors duration-500 mb-6">0%</h2>
+
+                        <!-- Análise Dinâmica -->
+                        <div id="iot-analysis-box" class="w-full bg-slate-950 border border-slate-800 p-4 rounded-lg text-left text-sm text-slate-300 transition-all duration-300">
+                            <strong class="text-neon-green flex items-center gap-2 mb-1"><i class="fa-solid fa-check-circle"></i> Status Operacional Estável</strong>
+                            <p>O algoritmo avalia que as variáveis físicas estão dentro do envelope de tolerância. O sequenciamento do APS segue confirmado sem riscos.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // --- Navegação Principal ---
+        function navTo(modId) {
+            document.querySelectorAll('.module-section').forEach(el => el.classList.remove('active'));
+            
+            const target = document.getElementById(modId);
+            if(target) target.classList.add('active');
+
+            document.querySelectorAll('.nav-link').forEach(btn => {
+                btn.classList.remove('bg-slate-800', 'text-white', 'border-slate-700');
+                btn.classList.add('text-slate-400', 'border-transparent');
+            });
+
+            const activeBtn = document.getElementById('nav-' + modId);
+            if(activeBtn) {
+                activeBtn.classList.remove('text-slate-400', 'border-transparent');
+                activeBtn.classList.add('bg-slate-800', 'text-white', 'border-slate-700');
+            }
+        }
+
+        // --- Módulo 2: Abas da Tríade ---
+        function openTab(tabId) {
+            document.querySelectorAll('.triad-tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+
+            document.querySelectorAll('.triad-tab-btn').forEach(btn => {
+                btn.classList.remove('bg-neon-blue/20', 'border-neon-blue', 'text-white', 'bg-neon-amber/20', 'border-neon-amber', 'bg-neon-green/20', 'border-neon-green');
+                btn.classList.add('bg-slate-800', 'border-slate-700', 'text-slate-400');
+            });
+
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.classList.remove('bg-slate-800', 'border-slate-700', 'text-slate-400');
+            
+            if(tabId === 'tab-erp') activeBtn.classList.add('bg-neon-blue/20', 'border-neon-blue', 'text-white');
+            if(tabId === 'tab-aps') activeBtn.classList.add('bg-neon-amber/20', 'border-neon-amber', 'text-white');
+            if(tabId === 'tab-mes') activeBtn.classList.add('bg-neon-green/20', 'border-neon-green', 'text-white');
+        }
+
+        // --- Módulo 3: Fluxo Integrado ---
+        let currentFlowStep = 1;
+        const flowData = {
+            1: { title: "1. Entrada do Pedido", desc: "O Comercial fecha uma venda com o cliente e insere os dados do pedido e prazo desejado no sistema central (ERP).", color: "bg-neon-blue" },
+            2: { title: "2. Processamento ERP (MRP)", desc: "O ERP analisa o estoque, avalia a necessidade de compra de matéria-prima e gera uma Ordem de Produção macro com capacidade infinita.", color: "bg-white" },
+            3: { title: "3. Sequenciamento APS", desc: "O APS recebe a ordem, avalia máquinas, turnos e ferramentas (capacidade finita) e cria um sequenciamento otimizado minuto a minuto.", color: "bg-neon-amber" },
+            4: { title: "4. Execução MES", desc: "No chão de fábrica, o operador segue a fila digital do APS, aponta inícios, paradas e refugos no terminal MES.", color: "bg-neon-green" },
+            5: { title: "5. Retroalimentação", desc: "Os dados do MES voltam instantaneamente: atualizam o progresso no APS e dão baixa no estoque e cálculo de custo real no ERP.", color: "bg-slate-400" }
+        };
+
+        function setFlowStep(step) {
+            currentFlowStep = step;
+            updateFlowUI();
+        }
+        function nextFlow() { if(currentFlowStep < 5) setFlowStep(currentFlowStep + 1); }
+        function prevFlow() { if(currentFlowStep > 1) setFlowStep(currentFlowStep - 1); }
+
+        function updateFlowUI() {
+            document.getElementById('flow-title').innerText = flowData[currentFlowStep].title;
+            document.getElementById('flow-title').className = `text-2xl font-bold mb-4 ${flowData[currentFlowStep].color.replace('bg-', 'text-')}`;
+            document.getElementById('flow-desc').innerText = flowData[currentFlowStep].desc;
+
+            for(let i=1; i<=5; i++) {
+                const node = document.getElementById(`node-${i}`);
+                if(i < currentFlowStep) {
+                    node.className = "w-16 h-16 mx-auto bg-neon-green text-slate-900 rounded-full flex items-center justify-center text-2xl border-4 border-slate-900 shadow-[0_0_15px_rgba(16,185,129,0.5)]";
+                    if(document.getElementById(`conn-${i}`)) document.getElementById(`conn-${i}`).classList.add('active');
+                } else if(i === currentFlowStep) {
+                    node.className = `w-16 h-16 mx-auto ${flowData[i].color} ${i===2||i===5?'text-slate-900':'text-white'} rounded-full flex items-center justify-center text-2xl border-4 border-slate-900 shadow-lg scale-110 transition-transform`;
+                    if(document.getElementById(`conn-${i}`)) document.getElementById(`conn-${i}`).classList.remove('active');
+                } else {
+                    node.className = "w-16 h-16 mx-auto bg-slate-800 text-slate-500 rounded-full flex items-center justify-center text-2xl border-4 border-slate-900";
+                    if(document.getElementById(`conn-${i}`)) document.getElementById(`conn-${i}`).classList.remove('active');
+                }
+            }
+        }
+
+        // --- Módulo 4: Simuladores ---
+        function openSimTab(tabId) {
+            document.querySelectorAll('.sim-tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+
+            const btnUrg = document.getElementById('btn-sim-urgente');
+            const btnQueb = document.getElementById('btn-sim-quebra');
+
+            if(tabId === 'sim-urgente') {
+                btnUrg.className = "px-6 py-3 font-bold text-neon-amber border-b-2 border-neon-amber bg-slate-900/50";
+                btnQueb.className = "px-6 py-3 font-bold text-slate-500 border-b-2 border-transparent hover:text-slate-300 transition-colors";
+            } else {
+                btnQueb.className = "px-6 py-3 font-bold text-neon-red border-b-2 border-neon-red bg-slate-900/50";
+                btnUrg.className = "px-6 py-3 font-bold text-slate-500 border-b-2 border-transparent hover:text-slate-300 transition-colors";
+            }
+        }
+
+        // Módulo 4 - Cenário 1: Gantt Logic
+        function addUrgentOrder(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-urgente');
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+
+            const name = document.getElementById('urg-name').value;
+            const time = parseInt(document.getElementById('urg-time').value);
+            
+            const track = document.getElementById('gantt-track');
+            const widthPct = Math.min(time * 8.3, 40); 
+            
+            document.getElementById('job-1').style.width = '10%';
+            
+            const setup = document.createElement('div');
+            setup.className = "gantt-item bg-rose-600 border border-rose-400 rounded h-full flex items-center justify-center text-[10px] font-bold text-white shadow new-entry px-2";
+            setup.style.width = '5%';
+            setup.innerText = "SETUP";
+            setup.id = "gantt-added-setup";
+
+            const order = document.createElement('div');
+            order.className = "gantt-item bg-amber-500 border border-amber-300 rounded h-full flex items-center justify-center text-xs font-mono font-bold text-black shadow new-entry px-2";
+            order.style.width = `${widthPct}%`;
+            order.innerText = name;
+            order.id = "gantt-added-order";
+
+            track.insertBefore(setup, document.getElementById('job-2'));
+            track.insertBefore(order, document.getElementById('job-2'));
+
+            const custoExtra = time * 150 + 400;
+            const custoFormatado = "R$ " + custoExtra.toLocaleString('pt-BR') + ",00";
+
+            document.getElementById('kpi-custo').innerText = custoFormatado;
+            document.getElementById('kpi-custo').classList.add('text-rose-400');
+            document.getElementById('kpi-atraso').innerText = time + " horas";
+            document.getElementById('kpi-atraso').classList.add('text-amber-400');
+
+            document.getElementById('dyn-urg-name').innerText = name;
+            document.getElementById('dyn-urg-delay').innerText = time + " horas";
+            document.getElementById('dyn-urg-cost').innerText = custoFormatado;
+            document.getElementById('urgente-analysis').classList.remove('hidden');
+        }
+
+        function resetGantt() {
+            document.getElementById('job-1').style.width = '30%';
+            const setup = document.getElementById('gantt-added-setup');
+            const order = document.getElementById('gantt-added-order');
+            if(setup) setup.remove();
+            if(order) order.remove();
+
+            document.getElementById('kpi-custo').innerText = "R$ 0,00";
+            document.getElementById('kpi-custo').classList.remove('text-rose-400');
+            document.getElementById('kpi-atraso').innerText = "0 horas";
+            document.getElementById('kpi-atraso').classList.remove('text-amber-400');
+            
+            document.getElementById('urgente-analysis').classList.add('hidden');
+            
+            const btn = document.getElementById('btn-submit-urgente');
+            btn.disabled = false;
+            btn.classList.remove('opacity-50');
+        }
+
+        // Módulo 4 - Cenário 2: Quebra Logic
+        const logTerm = document.getElementById('term-log');
+        function addLog(text, type='sys') {
+            const div = document.createElement('div');
+            const time = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+            let pre = '[SISTEMA]'; let color = 'text-slate-400';
+            if(type==='mes') { pre = '[MES]'; color = 'text-neon-red'; }
+            if(type==='aps') { pre = '[APS]'; color = 'text-neon-amber'; }
+            if(type==='ok') { pre = '[APS/MES]'; color = 'text-neon-green'; }
+            
+            div.innerHTML = `<span class="${color} font-bold">${pre}</span> <span class="text-slate-300">[${time}] ${text}</span>`;
+            logTerm.appendChild(div);
+            logTerm.scrollTop = logTerm.scrollHeight;
+        }
+
+        async function triggerBreakdownForm(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-quebra');
+            btn.disabled = true; btn.classList.add('opacity-50');
+
+            const reason = document.getElementById('brk-reason').value;
+            const duration = document.getElementById('brk-duration').value;
+
+            const m1 = document.getElementById('ui-m1');
+            m1.classList.remove('border-neon-green');
+            m1.classList.add('border-neon-red', 'animate-pulse-fast', 'bg-red-900/20');
+            
+            document.getElementById('ui-m1-status').innerText = "PARADA";
+            document.getElementById('ui-m1-status').className = "bg-neon-red text-white text-xs font-bold px-2 py-1 rounded";
+            document.getElementById('ui-m1-progress').classList.replace('bg-neon-green', 'bg-neon-red');
+
+            addLog(`ALERTA CRÍTICO: Parada registrada. Motivo: ${reason}. Previsão: ${duration} min.`, 'mes');
+            
+            await new Promise(r => setTimeout(r, 1500));
+            addLog("Analisando malha produtiva. Identificando rotas alternativas para OP-505...", 'aps');
+            
+            await new Promise(r => setTimeout(r, 2000));
+            addLog("Rota alternativa encontrada (M2). Recalculando setup e tempos de entrega.", 'aps');
+
+            await new Promise(r => setTimeout(r, 1500));
+            
+            const m2 = document.getElementById('ui-m2');
+            m2.classList.remove('opacity-50', 'border-slate-800');
+            m2.classList.add('border-neon-amber', 'bg-amber-900/10');
+            
+            document.getElementById('ui-m2-status').innerText = "PRODUZINDO (DESVIO)";
+            document.getElementById('ui-m2-status').className = "bg-neon-amber text-slate-900 text-xs font-bold px-2 py-1 rounded";
+            
+            document.getElementById('ui-m2-op').innerText = "OP-505";
+            document.getElementById('ui-m2-op').classList.add('text-neon-amber');
+            
+            document.getElementById('ui-m2-progress').style.width = '10%';
+            document.getElementById('ui-m2-progress').classList.replace('bg-slate-700', 'bg-neon-amber');
+            
+            m1.classList.remove('animate-pulse-fast'); 
+
+            addLog("Replanejamento concluído. OP-505 transferida para M2 com sucesso.", 'ok');
+            
+            document.getElementById('dyn-brk-reason').innerText = reason;
+            document.getElementById('dyn-brk-time').innerText = duration;
+            document.getElementById('quebra-analysis').classList.remove('hidden');
+        }
+
+        function resetBreakdown() {
+            const m1 = document.getElementById('ui-m1');
+            m1.className = "bg-slate-900 border-2 border-neon-green rounded-xl p-5 transition-all relative overflow-hidden";
+            document.getElementById('ui-m1-status').innerText = "RODANDO";
+            document.getElementById('ui-m1-status').className = "bg-neon-green text-slate-900 text-xs font-bold px-2 py-1 rounded";
+            document.getElementById('ui-m1-progress').className = "bg-neon-green h-full w-1/2";
+
+            const m2 = document.getElementById('ui-m2');
+            m2.className = "bg-slate-900 border border-slate-800 rounded-xl p-5 opacity-50 transition-all";
+            document.getElementById('ui-m2-status').innerText = "OCIOSA";
+            document.getElementById('ui-m2-status').className = "bg-slate-800 text-slate-400 border border-slate-700 text-xs font-bold px-2 py-1 rounded";
+            document.getElementById('ui-m2-op').innerText = "--";
+            document.getElementById('ui-m2-op').className = "font-mono";
+            document.getElementById('ui-m2-progress').className = "bg-slate-700 h-full w-0";
+
+            logTerm.innerHTML = '<div><span class="text-neon-blue">[SISTEMA]</span> Simulação reiniciada.</div>';
+            document.getElementById('quebra-analysis').classList.add('hidden');
+            
+            const btn = document.getElementById('btn-submit-quebra');
+            btn.disabled = false; btn.classList.remove('opacity-50');
+        }
+
+        // --- Módulo 5: Calculadora OEE e Análise ---
+        function calculateOEE(e) {
+            e.preventDefault();
+            
+            const tTotal = parseFloat(document.getElementById('oee-total-time').value);
+            const tDown = parseFloat(document.getElementById('oee-down-time').value);
+            const cycleTime = parseFloat(document.getElementById('oee-cycle').value);
+            const prodTotal = parseFloat(document.getElementById('oee-prod').value);
+            const prodGood = parseFloat(document.getElementById('oee-good').value);
+
+            // Evitar divisão por zero
+            if (tTotal <= 0 || prodTotal <= 0) return;
+
+            const opTime = tTotal - tDown;
+            let A = (opTime / tTotal) * 100;
+            let P = ((prodTotal * cycleTime) / opTime) * 100;
+            let Q = (prodGood / prodTotal) * 100;
+            
+            A = Math.max(0, Math.min(100, A || 0));
+            P = Math.max(0, Math.min(100, P || 0));
+            Q = Math.max(0, Math.min(100, Q || 0));
+
+            const OEE = (A / 100) * (P / 100) * (Q / 100) * 100;
+
+            document.getElementById('val-a').innerText = A.toFixed(1) + '%';
+            document.getElementById('val-p').innerText = P.toFixed(1) + '%';
+            document.getElementById('val-q').innerText = Q.toFixed(1) + '%';
+            document.getElementById('val-oee').innerText = OEE.toFixed(1) + '%';
+
+            // Lógica do Painel de Análise
+            const analysisPanel = document.getElementById('oee-analysis-panel');
+            const titleEl = document.getElementById('oee-analysis-title');
+            const textEl = document.getElementById('oee-analysis-text');
+            const actionEl = document.getElementById('oee-action-text');
+
+            let statusClass, statusIcon, statusText;
+            if(OEE >= 85) {
+                statusClass = "border-neon-green text-neon-green";
+                statusIcon = "<i class='fa-solid fa-medal'></i>";
+                statusText = "Classe Mundial (Excelente)";
+            } else if (OEE >= 65) {
+                statusClass = "border-neon-amber text-neon-amber";
+                statusIcon = "<i class='fa-solid fa-scale-balanced'></i>";
+                statusText = "Regular (Requer Atenção)";
+            } else {
+                statusClass = "border-neon-red text-neon-red";
+                statusIcon = "<i class='fa-solid fa-triangle-exclamation'></i>";
+                statusText = "Crítico (Baixo Desempenho)";
+            }
+
+            titleEl.innerHTML = `${statusIcon} Nível: ${statusText}`;
+            titleEl.className = `text-xl font-bold mb-3 flex items-center gap-2 ${statusClass.split(' ')[1]}`;
+            analysisPanel.className = `bg-[#0a0f1c] border-t-4 p-6 rounded-xl shadow-lg mt-2 block ${statusClass.split(' ')[0]}`;
+
+            const factors = [
+                { name: 'Disponibilidade', val: A, desc: 'excesso de tempo de máquina parada (setups demorados ou quebras frequentes)' },
+                { name: 'Performance', val: P, desc: 'microparadas e operação com velocidade abaixo do ciclo padrão planejado' },
+                { name: 'Qualidade', val: Q, desc: 'alto índice de geração de refugo, sucata ou peças que exigem retrabalho' }
+            ];
+            
+            factors.sort((a, b) => a.val - b.val);
+            const worst = factors[0];
+
+            textEl.innerHTML = `O resultado global de <strong>${OEE.toFixed(1)}%</strong> sinaliza o panorama atual de aproveitamento dos ativos. Observando a estratificação matemática, constatamos que o indicador que mais prejudicou a sua capacidade produtiva foi a <strong class="text-white text-md border-b border-dotted">${worst.name} (${worst.val.toFixed(1)}%)</strong>. Isso evidencia ${worst.desc}.`;
+
+            if(worst.name === 'Disponibilidade') {
+                actionEl.innerHTML = "Aplicar a metodologia <strong>SMED (Troca Rápida de Ferramenta)</strong> para converter atividades de setup interno em externo. Estabelecer rotinas de <strong>Manutenção Autônoma (TPM)</strong> com os operadores para mitigar falhas precoces.";
+            } else if (worst.name === 'Performance') {
+                actionEl.innerHTML = "Mapear as <strong>microparadas de linha</strong> que muitas vezes passam despercebidas no apontamento manual. Treinar os operadores para atingir a velocidade nominal e investigar gargalos de abastecimento de material na máquina.";
+            } else {
+                actionEl.innerHTML = "Implementar sistemas <strong>Poka-Yoke (à prova de erros)</strong> para evitar a geração do defeito logo na origem. Promover ciclos de <strong>PDCA / Diagrama de Ishikawa</strong> para descobrir a causa raiz da variabilidade.";
+            }
+
+            // Animar as barras
+            setTimeout(() => {
+                document.getElementById('bar-a').style.width = A + '%';
+                document.getElementById('bar-p').style.width = P + '%';
+                document.getElementById('bar-q').style.width = Q + '%';
+                document.getElementById('bar-oee').style.width = OEE + '%';
+                
+                const barOee = document.getElementById('bar-oee');
+                barOee.className = `h-full transition-all duration-1000 relative ${OEE >= 85 ? 'bg-neon-green' : OEE >= 65 ? 'bg-neon-amber' : 'bg-neon-red'}`;
+            }, 50);
+        }
+
+        // --- Módulo 6: IA e Preditiva ---
+        function openSim6Tab(tabId) {
+            document.querySelectorAll('.sim6-tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+
+            const btnDem = document.getElementById('btn-sim6-demanda');
+            const btnMan = document.getElementById('btn-sim6-manutencao');
+
+            if(tabId === 'sim6-demanda') {
+                btnDem.className = "px-6 py-3 font-bold text-neon-blue border-b-2 border-neon-blue bg-slate-900/50";
+                btnMan.className = "px-6 py-3 font-bold text-slate-500 border-b-2 border-transparent hover:text-slate-300 transition-colors";
+            } else {
+                btnMan.className = "px-6 py-3 font-bold text-neon-amber border-b-2 border-neon-amber bg-slate-900/50";
+                btnDem.className = "px-6 py-3 font-bold text-slate-500 border-b-2 border-transparent hover:text-slate-300 transition-colors";
+            }
+        }
+
+        // Simulação 1: Previsão de Demanda e Gargalos
+        function runDemandPrediction(e) {
+            e.preventDefault();
+            const base = parseInt(document.getElementById('ai-dem-base').value) || 5000;
+            const mkt = document.getElementById('ai-dem-mkt').value;
+            const saz = document.getElementById('ai-dem-saz').value;
+
+            // Lógica do Algoritmo (Multiplicadores Simulados)
+            let multiplier = 1.0;
+            let explanation = [];
+
+            if (mkt === 'alto') { multiplier += 0.35; explanation.push("A alta carga de investimento comercial detectada historicamente eleva o consumo."); }
+            if (mkt === 'baixo') { multiplier -= 0.20; explanation.push("A redução de verba de marketing esfria a propensão de conversão no funil de vendas."); }
+            
+            if (saz === 'alta') { multiplier += 0.45; explanation.push("A correlação com o clima/data altamente favorável alavanca severamente a saída do produto."); }
+            if (saz === 'baixa') { multiplier -= 0.30; explanation.push("O cenário de baixa temporada reprime a necessidade natural do mercado."); }
+
+            const prediction = Math.round(base * multiplier);
+            const isSpike = prediction > base * 1.2;
+            const isDrop = prediction < base * 0.8;
+
+            // UI Updates
+            document.getElementById('ai-dem-result-text').innerText = prediction.toLocaleString('pt-BR') + ' Un';
+            
+            // Adjust bar height relative to maximum
+            const maxVal = Math.max(base * 1.5, prediction);
+            const barHeightPct = Math.min(100, (prediction / maxVal) * 100);
+            
+            const bar = document.getElementById('ai-dem-bar');
+            bar.style.height = barHeightPct + '%';
+            
+            if (isSpike) {
+                bar.classList.replace('bg-purple-600', 'bg-neon-amber');
+                bar.classList.replace('border-purple-300', 'border-amber-300');
+                bar.classList.replace('shadow-[0_0_20px_rgba(147,51,234,0.5)]', 'shadow-[0_0_20px_rgba(245,158,11,0.5)]');
+            } else if (isDrop) {
+                bar.classList.replace('bg-purple-600', 'bg-slate-500');
+                bar.classList.replace('border-purple-300', 'border-slate-300');
+                bar.classList.replace('shadow-[0_0_20px_rgba(147,51,234,0.5)]', 'shadow-[0_0_20px_rgba(100,116,139,0.5)]');
+            } else {
+                // Reset to purple
+                bar.className = "w-1/4 bg-purple-600 rounded-t flex items-end justify-center pb-2 text-[10px] text-white font-mono font-bold transition-all duration-1000 shadow-[0_0_20px_rgba(147,51,234,0.5)] border-t-2 border-purple-300";
+            }
+
+            // Analysis Panel Logic
+            const analysisBox = document.getElementById('ai-dem-analysis');
+            const analysisContent = document.getElementById('ai-dem-analysis-content');
+            
+            let impactText = "";
+            let actionText = "";
+
+            if (isSpike) {
+                impactText = `O algoritmo projetou um <strong>Pico de Demanda de ${prediction.toLocaleString('pt-BR')} unidades</strong>. ${explanation.join(" ")}`;
+                actionText = `<strong class="text-neon-amber">Ações Preventivas do Sistema:</strong> <br>1. O <strong>ERP</strong> já disparou requisições de compra extras para os fornecedores de curva A visando não faltar material.<br>2. O <strong>APS</strong> simulou o cenário e identificou que a Máquina 1 será o <span class="text-neon-red font-bold">GARGALO</span> daqui a 15 dias. Sugestão aprovada: O sistema já sugeriu a abertura de um 3º turno provisório.`;
+            } else if (isDrop) {
+                impactText = `O algoritmo projetou uma <strong>Queda de Demanda para ${prediction.toLocaleString('pt-BR')} unidades</strong>. ${explanation.join(" ")}`;
+                actionText = `<strong class="text-neon-blue">Ações Preventivas do Sistema:</strong> <br>1. O <strong>ERP</strong> bloqueou ordens de ressuprimento automático para evitar a geração de estoque obsoleto e travar fluxo de caixa.<br>2. O <strong>APS</strong> agendou ociosidade controlada, sugerindo adiantar as manutenções preventivas (TPM) para este período de baixa carga.`;
+            } else {
+                impactText = `O algoritmo projetou uma <strong>Demanda Estável de ${prediction.toLocaleString('pt-BR')} unidades</strong>, muito próxima à média histórica.`;
+                actionText = `<strong class="text-neon-green">Status:</strong> Operação balanceada. Nenhuma intervenção drástica requerida nos módulos ERP/APS.`;
+            }
+
+            analysisContent.innerHTML = `<p class="text-white">${impactText}</p><p class="mt-2 bg-slate-800/50 p-3 rounded border border-slate-700">${actionText}</p>`;
+            analysisBox.classList.remove('hidden');
+        }
+
+        // Simulação 2: Manutenção Preditiva (Sensores IoT)
+        function updatePredictiveSensors() {
+            const temp = parseFloat(document.getElementById('iot-temp').value);
+            const vib = parseFloat(document.getElementById('iot-vib').value);
+
+            // Update Labels
+            document.getElementById('iot-temp-val').innerText = temp.toFixed(1) + ' °C';
+            document.getElementById('iot-vib-val').innerText = vib.toFixed(1) + ' mm/s';
+
+            // Cálculo do Score de Risco da IA (Baseado em limites)
+            // Temp normal: 40-80, warning 80-100, critico >100
+            // Vib normal: 0-5, warning 5-10, critico >10
+            
+            let risk = 0;
+            
+            if(temp > 80) risk += (temp - 80) * 1.5;
+            if(vib > 5) risk += (vib - 5) * 5;
+            
+            // Sinergia destrutiva (Alta temp + Alta vib aumenta o risco exponencialmente)
+            if(temp > 90 && vib > 8) risk += 30;
+
+            risk = Math.min(100, Math.max(0, risk));
+
+            // UI Elements
+            const riskText = document.getElementById('iot-risk-text');
+            const icon = document.getElementById('iot-motor-icon');
+            const ring = document.getElementById('iot-alert-ring');
+            const analysisBox = document.getElementById('iot-analysis-box');
+
+            riskText.innerText = Math.round(risk) + '%';
+
+            // Estados
+            if (risk < 30) {
+                riskText.className = "text-6xl font-black font-mono text-neon-green transition-colors duration-500 mb-6";
+                icon.className = "fa-solid fa-gear text-8xl text-neon-green transition-all duration-500";
+                icon.style.animation = "spin 4s linear infinite";
+                ring.classList.replace('border-rose-500', 'border-transparent');
+                ring.classList.remove('opacity-100');
+                
+                analysisBox.className = "w-full bg-slate-950 border border-slate-800 p-4 rounded-lg text-left text-sm text-slate-300 transition-all duration-300";
+                analysisBox.innerHTML = `<strong class="text-neon-green flex items-center gap-2 mb-1"><i class="fa-solid fa-check-circle"></i> Status Operacional Estável</strong><p>O algoritmo avalia que a assinatura térmica e vibratória estão dentro do envelope de projeto. O sequenciamento do APS segue confirmado.</p>`;
+            
+            } else if (risk < 70) {
+                riskText.className = "text-6xl font-black font-mono text-neon-amber transition-colors duration-500 mb-6";
+                icon.className = "fa-solid fa-gear text-8xl text-neon-amber transition-all duration-500";
+                icon.style.animation = "spin 2s linear infinite";
+                ring.classList.replace('border-rose-500', 'border-transparent');
+                ring.classList.remove('opacity-100');
+
+                analysisBox.className = "w-full bg-amber-900/20 border border-amber-500/50 p-4 rounded-lg text-left text-sm text-slate-300 transition-all duration-300";
+                analysisBox.innerHTML = `<strong class="text-neon-amber flex items-center gap-2 mb-1"><i class="fa-solid fa-triangle-exclamation"></i> Desgaste Anômalo Detectado</strong><p>A Machine Learning detectou um padrão de curva ("Degradação de Rolamento"). A peça falhará em aproximadamente 4 dias. <br><strong>Ação do Sistema:</strong> Alerta amarelo emitido para a Engenharia. Nenhuma quebra no fluxo de produção atual.</p>`;
+            
+            } else {
+                riskText.className = "text-6xl font-black font-mono text-neon-red transition-colors duration-500 mb-6 animate-pulse";
+                icon.className = "fa-solid fa-gear text-8xl text-neon-red transition-all duration-500";
+                icon.style.animation = "spin 0.5s linear infinite";
+                ring.classList.replace('border-transparent', 'border-rose-500');
+                ring.classList.add('opacity-100');
+
+                analysisBox.className = "w-full bg-rose-900/20 border border-rose-500/50 p-4 rounded-lg text-left text-sm text-slate-300 transition-all duration-300";
+                analysisBox.innerHTML = `<strong class="text-neon-red flex items-center gap-2 mb-1"><i class="fa-solid fa-skull-crossbones"></i> Colapso Iminente Antecipado</strong><p>Risco severo de ruptura do eixo do motor. A falha ocorreria em poucas horas, destruindo o sequenciamento.<br><strong class="text-white">Ação do Sistema Integrado:</strong><br>1. O MES bloqueou o início da próxima OP pesada.<br>2. A IA inseriu automaticamente uma OP de Manutenção Corretiva Planejada (1h de duração) no cronograma do APS para agora.<br>3. O que seria uma perda de 12 horas, transformou-se em uma intervenção de apenas 1 hora.</p>`;
+            }
+        }
+        
+        // --- Setup Inicial (Window Load) ---
+        window.onload = function() {
+            updateFlowUI();
+            
+            const formOee = document.getElementById('form-oee');
+            if(formOee) {
+                // Simula o clique inicial para gerar os gráficos
+                formOee.dispatchEvent(new Event('submit', { 'cancelable': true, 'bubbles': true }));
+            }
+        }
+    </script>
+</body>
+</html>
